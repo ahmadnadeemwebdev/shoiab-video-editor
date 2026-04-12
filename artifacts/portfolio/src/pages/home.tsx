@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react';
-import { motion, useScroll, useTransform, useInView, AnimatePresence } from 'framer-motion';
+import { useRef, useState, useEffect } from 'react';
+import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionValue, useSpring } from 'framer-motion';
 import {
-  Play, Mail, MessageCircle, Instagram, Youtube, Twitter,
+  Play, Pause, Mail, MessageCircle, Instagram, Youtube, Twitter,
   Scissors, Film, Palette, Zap, Monitor, Users,
-  ArrowDown, ChevronRight, Star, Quote, CheckCircle, Sparkles, X
+  ArrowDown, ChevronRight, Star, Quote, CheckCircle, Sparkles, X,
+  Trophy, Clock, Smile, TrendingUp
 } from 'lucide-react';
 
 import heroBg from "../assets/hero-bg.png";
@@ -12,19 +13,32 @@ import project2 from "../assets/project-2.png";
 import project3 from "../assets/project-3.png";
 import aboutPortrait from "../assets/about-portrait.png";
 
+/* ── Free stock video URLs (Mixkit CDN) ── */
+const HERO_VIDEO = "https://assets.mixkit.co/videos/preview/mixkit-working-on-video-editing-in-a-studio-with-multiple-screens-34738-large.mp4";
+const VIDEO_MAP: Record<string, string> = {
+  YouTube:   "https://assets.mixkit.co/videos/preview/mixkit-man-filming-with-a-camera-on-a-tripod-at-sunset-34386-large.mp4",
+  Reels:     "https://assets.mixkit.co/videos/preview/mixkit-woman-dancing-in-a-neon-lit-corridor-4402-large.mp4",
+  Cinematic: "https://assets.mixkit.co/videos/preview/mixkit-aerial-view-of-a-city-during-the-night-5178-large.mp4",
+  Wedding:   "https://assets.mixkit.co/videos/preview/mixkit-groom-and-bride-looking-at-each-other-4066-large.mp4",
+};
+
+/* ── Reusable scroll-triggered fade ── */
 function FadeIn({ children, delay = 0, className = "", direction = "up" }: {
-  children: React.ReactNode; delay?: number; className?: string; direction?: "up" | "left" | "right" | "none"
+  children: React.ReactNode; delay?: number; className?: string;
+  direction?: "up" | "left" | "right" | "none";
 }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-60px" });
-  const initial = direction === "up" ? { opacity: 0, y: 40 }
-    : direction === "left" ? { opacity: 0, x: -40 }
-    : direction === "right" ? { opacity: 0, x: 40 }
-    : { opacity: 0 };
+  const variants: Record<string, { opacity: number; x?: number; y?: number }> = {
+    up:    { opacity: 0, y: 45 },
+    left:  { opacity: 0, x: -45 },
+    right: { opacity: 0, x: 45 },
+    none:  { opacity: 0 },
+  };
   return (
-    <motion.div ref={ref} initial={initial}
+    <motion.div ref={ref} initial={variants[direction]}
       animate={inView ? { opacity: 1, y: 0, x: 0 } : {}}
-      transition={{ duration: 0.75, delay, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: 0.8, delay, ease: [0.16, 1, 0.3, 1] }}
       className={className}
     >
       {children}
@@ -32,91 +46,254 @@ function FadeIn({ children, delay = 0, className = "", direction = "up" }: {
   );
 }
 
+/* ── Animated stat counter ── */
+function Counter({ target, suffix = "" }: { target: number; suffix?: string }) {
+  const ref = useRef<HTMLSpanElement>(null);
+  const inView = useInView(ref, { once: true });
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    if (!inView) return;
+    let start = 0;
+    const step = target / 60;
+    const timer = setInterval(() => {
+      start += step;
+      if (start >= target) { setCount(target); clearInterval(timer); }
+      else setCount(Math.floor(start));
+    }, 20);
+    return () => clearInterval(timer);
+  }, [inView, target]);
+  return <span ref={ref}>{count}{suffix}</span>;
+}
+
+/* ── Video card with hover autoplay ── */
+function VideoCard({ project, index }: { project: typeof allProjects[0]; index: number }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [hovered, setHovered] = useState(false);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+
+  const handleMouseEnter = () => {
+    setHovered(true);
+    if (videoRef.current) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.play().catch(() => {});
+    }
+  };
+  const handleMouseLeave = () => {
+    setHovered(false);
+    if (videoRef.current) {
+      videoRef.current.pause();
+      videoRef.current.currentTime = 0;
+    }
+  };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 40, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.92 }}
+      transition={{ duration: 0.5, delay: index * 0.07 }}
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+      className="group relative overflow-hidden rounded-2xl cursor-pointer video-card"
+      style={{ border: "1px solid rgba(139,92,246,0.12)" }}
+    >
+      {/* Thumbnail image */}
+      <div className="aspect-video overflow-hidden bg-black relative">
+        <motion.img
+          src={project.image}
+          alt={project.title}
+          className="w-full h-full object-cover absolute inset-0 z-10"
+          animate={{ opacity: hovered && videoLoaded ? 0 : 1, scale: hovered ? 1.06 : 1 }}
+          transition={{ duration: 0.5 }}
+          style={{ filter: "brightness(0.7)" }}
+        />
+        {/* Actual video */}
+        <video
+          ref={videoRef}
+          src={project.videoUrl}
+          muted
+          loop
+          playsInline
+          preload="none"
+          onLoadedData={() => setVideoLoaded(true)}
+          className="absolute inset-0 w-full h-full object-cover z-20"
+          style={{ opacity: hovered && videoLoaded ? 1 : 0, transition: "opacity 0.5s ease" }}
+        />
+
+        {/* Cinematic letterbox bars on hover */}
+        <motion.div
+          className="absolute top-0 left-0 right-0 h-8 bg-black z-30 pointer-events-none"
+          animate={{ scaleY: hovered ? 1 : 0 }}
+          style={{ transformOrigin: "top" }}
+          transition={{ duration: 0.35 }}
+        />
+        <motion.div
+          className="absolute bottom-0 left-0 right-0 h-8 bg-black z-30 pointer-events-none"
+          animate={{ scaleY: hovered ? 1 : 0 }}
+          style={{ transformOrigin: "bottom" }}
+          transition={{ duration: 0.35 }}
+        />
+
+        {/* Play pulse button */}
+        <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
+          <motion.div
+            animate={{ opacity: hovered ? 1 : 0, scale: hovered ? 1 : 0.7 }}
+            transition={{ duration: 0.3 }}
+            className="relative"
+          >
+            <motion.div
+              animate={{ scale: hovered ? [1, 1.4, 1] : 1, opacity: hovered ? [0.6, 0, 0.6] : 0 }}
+              transition={{ repeat: Infinity, duration: 1.6 }}
+              className="absolute inset-0 rounded-full"
+              style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}
+            />
+            <div className="relative w-16 h-16 rounded-full flex items-center justify-center neon-glow"
+              style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>
+              <Play className="w-6 h-6 fill-white text-white ml-1" />
+            </div>
+          </motion.div>
+        </div>
+
+        {/* Progress bar on hover */}
+        <motion.div
+          className="absolute bottom-8 left-0 right-0 h-0.5 z-40 pointer-events-none"
+          style={{ background: "rgba(255,255,255,0.15)" }}
+          animate={{ opacity: hovered ? 1 : 0 }}
+        >
+          <motion.div
+            className="h-full"
+            style={{ background: "linear-gradient(to right,#8b5cf6,#3b82f6)" }}
+            animate={{ width: hovered ? "100%" : "0%" }}
+            transition={{ duration: hovered ? 12 : 0, ease: "linear" }}
+          />
+        </motion.div>
+      </div>
+
+      {/* Info bar */}
+      <div className="absolute bottom-0 left-0 right-0 p-5 z-50"
+        style={{ background: "linear-gradient(to top, rgba(8,8,16,0.98) 0%, rgba(8,8,16,0.7) 65%, transparent 100%)" }}>
+        <div className="flex items-end justify-between">
+          <div>
+            <div className="gradient-text text-xs font-bold uppercase tracking-widest mb-1.5">{project.category}</div>
+            <h3 className="text-white font-black text-lg leading-tight transition-all duration-300 group-hover:[background:linear-gradient(135deg,#a78bfa,#60a5fa)] group-hover:[-webkit-background-clip:text] group-hover:[-webkit-text-fill-color:transparent]">
+              {project.title}
+            </h3>
+            <p className="text-white/35 text-xs mt-1 line-clamp-1">{project.desc}</p>
+          </div>
+          <div className="text-white/30 text-xs font-mono glass px-2.5 py-1.5 rounded-lg shrink-0 ml-3">
+            {project.duration}
+          </div>
+        </div>
+      </div>
+
+      {/* Border glow on hover */}
+      <motion.div
+        className="absolute inset-0 rounded-2xl pointer-events-none z-50"
+        animate={{ boxShadow: hovered ? "inset 0 0 0 1px rgba(139,92,246,0.5), 0 0 30px rgba(139,92,246,0.2)" : "inset 0 0 0 1px transparent" }}
+        transition={{ duration: 0.3 }}
+      />
+    </motion.div>
+  );
+}
+
+/* ── Data ── */
 const CATEGORIES = ["All", "YouTube", "Reels", "Cinematic", "Wedding"];
 
 const allProjects = [
-  { id: 1, title: "Brand Story Reel", category: "YouTube", duration: "2:45", image: project1, desc: "Dynamic brand storytelling with punchy cuts and motion graphics." },
-  { id: 2, title: "Music Video Edit", category: "Cinematic", duration: "3:47", image: project2, desc: "Cinematic color grade and seamless beat-synced transitions." },
-  { id: 3, title: "Short Film Cut", category: "Cinematic", duration: "8:15", image: project3, desc: "Narrative short with emotional pacing and immersive sound design." },
-  { id: 4, title: "Wedding Highlights", category: "Wedding", duration: "4:20", image: project1, desc: "Emotional highlight reel capturing the most precious moments." },
-  { id: 5, title: "Product Reel Pack", category: "Reels", duration: "0:30", image: project2, desc: "Fast-paced product showcase optimized for Instagram and TikTok." },
-  { id: 6, title: "Vlog Series Ep. 1", category: "YouTube", duration: "12:00", image: project3, desc: "Engaging travel vlog with smooth cuts and energetic pacing." },
+  { id: 1, title: "Brand Story Reel", category: "YouTube",   duration: "2:45", image: project1, desc: "Dynamic brand storytelling with punchy cuts and motion graphics.", videoUrl: VIDEO_MAP.YouTube },
+  { id: 2, title: "Music Video Edit",  category: "Cinematic", duration: "3:47", image: project2, desc: "Cinematic color grade and seamless beat-synced transitions.",       videoUrl: VIDEO_MAP.Cinematic },
+  { id: 3, title: "Short Film Cut",    category: "Cinematic", duration: "8:15", image: project3, desc: "Narrative short with emotional pacing and immersive sound design.",   videoUrl: VIDEO_MAP.Cinematic },
+  { id: 4, title: "Wedding Highlights",category: "Wedding",   duration: "4:20", image: project1, desc: "Emotional highlight reel capturing the most precious moments.",       videoUrl: VIDEO_MAP.Wedding },
+  { id: 5, title: "Product Reel Pack", category: "Reels",     duration: "0:30", image: project2, desc: "Fast-paced product showcase optimized for Instagram and TikTok.",    videoUrl: VIDEO_MAP.Reels },
+  { id: 6, title: "Vlog Series Ep. 1", category: "YouTube",   duration: "12:00",image: project3, desc: "Engaging travel vlog with smooth cuts and energetic pacing.",         videoUrl: VIDEO_MAP.YouTube },
 ];
 
 const skills = [
   { icon: <Monitor className="w-6 h-6" />, name: "Adobe Premiere Pro", level: 90, color: "from-purple-500 to-violet-600" },
-  { icon: <Scissors className="w-6 h-6" />, name: "CapCut", level: 95, color: "from-blue-500 to-cyan-500" },
-  { icon: <Film className="w-6 h-6" />, name: "Video Editing", level: 92, color: "from-purple-500 to-blue-500" },
-  { icon: <Palette className="w-6 h-6" />, name: "Color Grading", level: 80, color: "from-violet-500 to-purple-600" },
-  { icon: <Zap className="w-6 h-6" />, name: "Transitions & Effects", level: 88, color: "from-blue-500 to-indigo-500" },
-  { icon: <Users className="w-6 h-6" />, name: "Social Media Content", level: 93, color: "from-cyan-500 to-blue-600" },
+  { icon: <Scissors className="w-6 h-6" />, name: "CapCut",             level: 95, color: "from-blue-500 to-cyan-500" },
+  { icon: <Film className="w-6 h-6" />,     name: "Video Editing",      level: 92, color: "from-purple-500 to-blue-500" },
+  { icon: <Palette className="w-6 h-6" />,  name: "Color Grading",      level: 80, color: "from-violet-500 to-purple-600" },
+  { icon: <Zap className="w-6 h-6" />,      name: "Transitions & FX",   level: 88, color: "from-blue-500 to-indigo-500" },
+  { icon: <Users className="w-6 h-6" />,    name: "Social Media Content",level: 93, color: "from-cyan-500 to-blue-600" },
 ];
 
 const services = [
-  { icon: <Youtube className="w-7 h-7" />, title: "YouTube Editing", desc: "Long-form content with clean cuts, dynamic graphics, and pacing that retains viewers.", price: "From $25", color: "from-red-500/20 to-red-600/5", border: "border-red-500/20 hover:border-red-500/50" },
-  { icon: <Zap className="w-7 h-7" />, title: "Reels & TikTok", desc: "Trend-driven short clips with viral hooks, effects, and music-synced transitions.", price: "From $10", color: "from-purple-500/20 to-purple-600/5", border: "border-purple-500/20 hover:border-purple-500/50" },
-  { icon: <Film className="w-7 h-7" />, title: "Cinematic Videos", desc: "Premium film-grade edits with rich color, sound design and emotional storytelling.", price: "From $50", color: "from-blue-500/20 to-blue-600/5", border: "border-blue-500/20 hover:border-blue-500/50" },
-  { icon: <Star className="w-7 h-7" />, title: "Wedding Edits", desc: "Timeless, cinematic highlight films that honor the emotion of your most special day.", price: "From $80", color: "from-pink-500/20 to-pink-600/5", border: "border-pink-500/20 hover:border-pink-500/50" },
+  { icon: <Youtube className="w-7 h-7" />, title: "YouTube Editing",    desc: "Long-form content with clean cuts, dynamic graphics, and pacing that keeps viewers hooked.",          price: "From $25", accent: "#ef4444" },
+  { icon: <Zap className="w-7 h-7" />,     title: "Reels & TikTok",     desc: "Trend-driven viral clips with hooks, sound-synced cuts, and platform-optimized formats.",              price: "From $10", accent: "#8b5cf6" },
+  { icon: <Film className="w-7 h-7" />,    title: "Cinematic Videos",   desc: "Premium film-grade productions with rich color grading, sound design, and narrative power.",           price: "From $50", accent: "#3b82f6" },
+  { icon: <Star className="w-7 h-7" />,    title: "Wedding Edits",      desc: "Timeless, emotionally charged wedding films that capture every moment for a lifetime.",                price: "From $80", accent: "#ec4899" },
 ];
 
 const testimonials = [
-  { name: "Aryan Khan", role: "YouTube Creator • 250K Subscribers", avatar: "AK", review: "Shoaib took my raw footage and turned it into something I'm genuinely proud of. The pacing, the transitions, the color — everything was exactly what I wanted but couldn't describe. Incredibly talented.", rating: 5 },
-  { name: "Sara Malik", role: "Fashion Brand Owner", avatar: "SM", review: "I needed a quick product reel for Instagram and Shoaib delivered within 24 hours. The quality blew me away — my engagement tripled after posting it. Highly recommend!", rating: 5 },
-  { name: "Usman Tariq", role: "Wedding Videographer", avatar: "UT", review: "Best editor I've worked with for wedding content. He understands emotion and timing better than anyone. My clients are always thrilled with the final result.", rating: 5 },
+  { name: "Aryan Khan",   role: "YouTube Creator • 250K Subs",    avatar: "AK", rating: 5, review: "Shoaib transformed my raw footage into something I'm genuinely proud of. Pacing, color, transitions — all exactly right. Seriously talented." },
+  { name: "Sara Malik",   role: "Fashion Brand Owner",            avatar: "SM", rating: 5, review: "Needed a product reel fast — Shoaib delivered in 24 hours. Quality was stunning. My Instagram engagement tripled. Will definitely work again." },
+  { name: "Usman Tariq",  role: "Wedding Videographer",           avatar: "UT", rating: 5, review: "Best editor I've collaborated with. He understands emotion and timing better than anyone. Every client I've referred him to has been blown away." },
+];
+
+const stats = [
+  { icon: <Trophy className="w-7 h-7" />,      value: 20,  suffix: "+", label: "Projects Done",      color: "#8b5cf6" },
+  { icon: <Smile className="w-7 h-7" />,        value: 15,  suffix: "+", label: "Happy Clients",      color: "#3b82f6" },
+  { icon: <Clock className="w-7 h-7" />,        value: 1,   suffix: "+", label: "Year Experience",    color: "#a78bfa" },
+  { icon: <TrendingUp className="w-7 h-7" />,   value: 100, suffix: "%", label: "Client Satisfaction",color: "#60a5fa" },
 ];
 
 const NAV_LINKS = ["About", "Skills", "Work", "Services", "Testimonials", "Contact"];
 
+/* ── Main component ── */
 export default function Home() {
   const heroRef = useRef<HTMLElement>(null);
+  const heroVideoRef = useRef<HTMLVideoElement>(null);
   const [activeCategory, setActiveCategory] = useState("All");
-  const [playingId, setPlayingId] = useState<number | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [heroVideoPaused, setHeroVideoPaused] = useState(false);
 
   const { scrollYProgress } = useScroll({ target: heroRef, offset: ["start start", "end start"] });
-  const heroY = useTransform(scrollYProgress, [0, 1], [0, 200]);
-  const heroOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0]);
-  const heroScale = useTransform(scrollYProgress, [0, 1], [1, 1.08]);
+  const heroY       = useTransform(scrollYProgress, [0, 1], [0, 160]);
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.75], [1, 0]);
+  const heroScale   = useTransform(scrollYProgress, [0, 1], [1, 1.1]);
 
   const filteredProjects = activeCategory === "All"
     ? allProjects
     : allProjects.filter(p => p.category === activeCategory);
 
+  const toggleHeroVideo = () => {
+    if (!heroVideoRef.current) return;
+    if (heroVideoPaused) { heroVideoRef.current.play(); setHeroVideoPaused(false); }
+    else { heroVideoRef.current.pause(); setHeroVideoPaused(true); }
+  };
+
   return (
-    <div className="min-h-screen bg-background text-foreground overflow-x-hidden">
+    <div className="min-h-screen bg-[#080810] text-foreground overflow-x-hidden">
 
       {/* ── NAV ── */}
       <motion.nav
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
         className="fixed top-0 w-full z-50 px-6 md:px-12 py-4 flex justify-between items-center"
-        style={{ background: "rgba(9,9,18,0.85)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(139,92,246,0.1)" }}
+        style={{ background: "rgba(8,8,16,0.88)", backdropFilter: "blur(24px)", borderBottom: "1px solid rgba(139,92,246,0.12)" }}
       >
         <a href="#" className="text-xl font-black uppercase tracking-tighter text-white">
           Shoaib<span className="gradient-text">.</span>
         </a>
-
-        <div className="hidden md:flex gap-7 text-sm font-medium tracking-wide text-white/60">
-          {NAV_LINKS.map((item) => (
+        <div className="hidden md:flex gap-7 text-sm font-semibold tracking-wide text-white/55">
+          {NAV_LINKS.map(item => (
             <a key={item} href={`#${item.toLowerCase()}`}
-              className="hover:text-white transition-colors duration-300 relative group py-1"
-            >
+              className="hover:text-white transition-colors duration-300 relative group py-1">
               {item}
               <span className="absolute bottom-0 left-0 w-0 h-px bg-gradient-to-r from-purple-500 to-blue-500 transition-all duration-300 group-hover:w-full" />
             </a>
           ))}
         </div>
-
         <div className="flex items-center gap-3">
           <a href="https://wa.me/923000000000" target="_blank" rel="noopener noreferrer"
-            className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm text-white transition-all duration-300 hover:scale-105 neon-glow"
-            style={{ background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }}
-          >
+            className="hidden md:inline-flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm text-white hover:scale-105 transition-all duration-300 neon-glow"
+            style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>
             <MessageCircle className="w-4 h-4" /> Hire Me
           </a>
-          <button onClick={() => setMobileMenuOpen(v => !v)} className="md:hidden text-white/70 hover:text-white">
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <span className="text-xl">☰</span>}
+          <button onClick={() => setMobileMenuOpen(v => !v)} className="md:hidden text-white/70 hover:text-white p-2">
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <div className="space-y-1.5"><div className="w-6 h-0.5 bg-white/70"/><div className="w-4 h-0.5 bg-white/70"/><div className="w-6 h-0.5 bg-white/70"/></div>}
           </button>
         </div>
       </motion.nav>
@@ -124,25 +301,16 @@ export default function Home() {
       {/* Mobile menu */}
       <AnimatePresence>
         {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-[65px] left-0 w-full z-40 flex flex-col gap-1 px-6 py-4"
-            style={{ background: "rgba(9,9,18,0.97)", borderBottom: "1px solid rgba(139,92,246,0.15)" }}
-          >
-            {NAV_LINKS.map((item) => (
-              <a key={item} href={`#${item.toLowerCase()}`}
-                onClick={() => setMobileMenuOpen(false)}
-                className="py-3 text-white/70 hover:text-white font-medium border-b border-white/5 last:border-0 transition-colors"
-              >
-                {item}
-              </a>
+          <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
+            className="fixed top-[65px] left-0 w-full z-40 flex flex-col px-6 py-4"
+            style={{ background: "rgba(8,8,16,0.97)", borderBottom: "1px solid rgba(139,92,246,0.15)" }}>
+            {NAV_LINKS.map(item => (
+              <a key={item} href={`#${item.toLowerCase()}`} onClick={() => setMobileMenuOpen(false)}
+                className="py-3.5 text-white/70 hover:text-white font-semibold border-b border-white/5 last:border-0 transition-colors">{item}</a>
             ))}
             <a href="https://wa.me/923000000000" target="_blank" rel="noopener noreferrer"
-              className="mt-3 flex items-center justify-center gap-2 py-3 rounded-full font-bold text-white"
-              style={{ background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }}
-            >
+              className="mt-4 flex items-center justify-center gap-2 py-3.5 rounded-full font-bold text-white neon-glow"
+              style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>
               <MessageCircle className="w-4 h-4" /> Hire Me on WhatsApp
             </a>
           </motion.div>
@@ -151,87 +319,115 @@ export default function Home() {
 
       {/* ── HERO ── */}
       <section ref={heroRef} className="relative h-screen w-full flex items-center justify-center overflow-hidden">
+        {/* Video background */}
         <motion.div style={{ y: heroY, scale: heroScale }} className="absolute inset-0 z-0">
-          <div className="absolute inset-0 z-10" style={{
-            background: "linear-gradient(to bottom, rgba(9,9,18,0.55) 0%, rgba(9,9,18,0.4) 40%, rgba(9,9,18,0.95) 100%)"
-          }} />
-          <div className="absolute inset-0 z-10" style={{
-            background: "radial-gradient(ellipse 60% 60% at 50% 50%, rgba(139,92,246,0.12) 0%, transparent 70%)"
-          }} />
-          <img src={heroBg} alt="Cinematic Studio" className="w-full h-full object-cover object-center" />
+          <div className="absolute inset-0 z-10 pointer-events-none" style={{
+            background: "linear-gradient(to bottom, rgba(8,8,16,0.4) 0%, rgba(8,8,16,0.25) 40%, rgba(8,8,16,1) 100%)"
+          }}/>
+          <div className="absolute inset-0 z-10 pointer-events-none" style={{
+            background: "radial-gradient(ellipse 65% 65% at 50% 40%, rgba(139,92,246,0.14) 0%, transparent 70%)"
+          }}/>
+          {/* Scanline overlay */}
+          <div className="absolute inset-0 z-10 scanline pointer-events-none opacity-40" />
+          {/* Video */}
+          <video
+            ref={heroVideoRef}
+            autoPlay muted loop playsInline
+            poster={heroBg}
+            className="w-full h-full object-cover"
+            style={{ filter: "brightness(0.55) saturate(1.1)" }}
+          >
+            <source src={HERO_VIDEO} type="video/mp4" />
+            <img src={heroBg} alt="Hero" className="w-full h-full object-cover" />
+          </video>
         </motion.div>
 
-        {/* Floating glow orbs */}
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 rounded-full opacity-10 blur-[120px] pointer-events-none z-10"
-          style={{ background: "radial-gradient(circle, #8b5cf6, transparent)" }} />
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 rounded-full opacity-8 blur-[100px] pointer-events-none z-10"
-          style={{ background: "radial-gradient(circle, #3b82f6, transparent)" }} />
+        {/* Ambient orbs */}
+        <div className="absolute top-1/3 left-1/5 w-[500px] h-[500px] rounded-full pointer-events-none z-10 blur-[140px] opacity-15"
+          style={{ background: "radial-gradient(circle,#8b5cf6,transparent)" }}/>
+        <div className="absolute bottom-1/4 right-1/5 w-96 h-96 rounded-full pointer-events-none z-10 blur-[120px] opacity-10"
+          style={{ background: "radial-gradient(circle,#3b82f6,transparent)" }}/>
 
-        <motion.div style={{ opacity: heroOpacity }} className="relative z-20 text-center px-6 max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="inline-flex items-center gap-2 mb-8 px-5 py-2.5 rounded-full glass"
-          >
-            <Sparkles className="w-4 h-4 text-purple-400" />
-            <span className="text-sm text-purple-300 font-semibold tracking-wider uppercase">Available for Projects</span>
+        <motion.div style={{ opacity: heroOpacity }} className="relative z-20 text-center px-6 max-w-6xl mx-auto w-full">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}
+            className="inline-flex items-center gap-2.5 mb-8 px-5 py-2.5 rounded-full glass-dark">
+            <motion.div animate={{ opacity: [1, 0.3, 1] }} transition={{ repeat: Infinity, duration: 2 }}
+              className="w-2 h-2 rounded-full bg-green-400"/>
+            <span className="text-sm text-white/70 font-semibold tracking-wider uppercase">Available for New Projects</span>
           </motion.div>
 
           <motion.h1
-            initial={{ opacity: 0, y: 60 }}
+            initial={{ opacity: 0, y: 80 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1.1, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="text-5xl md:text-7xl lg:text-[90px] font-black uppercase tracking-tighter leading-none mb-6"
+            transition={{ duration: 1.2, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="font-black uppercase tracking-tighter leading-[0.9] mb-6"
           >
-            <span className="text-white">Shoaib</span>
-            <br />
-            <span className="gradient-text neon-text">Professional Video Editor</span>
+            <span className="block text-white" style={{ fontSize: "clamp(3rem, 10vw, 7rem)" }}>Shoaib</span>
+            <span className="block gradient-text" style={{ fontSize: "clamp(1.8rem, 5.5vw, 4rem)", letterSpacing: "-0.02em" }}>
+              Cinematic Video Editor
+            </span>
           </motion.h1>
 
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.9 }}
-            className="text-xl md:text-2xl text-white/50 font-light mb-12 max-w-2xl mx-auto"
-          >
-            Crafting stories through visuals — frame by frame, cut by cut.
+          <motion.p initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.95 }}
+            className="text-xl md:text-2xl text-white/45 font-light mb-12 max-w-xl mx-auto">
+            I turn raw footage into powerful stories.
           </motion.p>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 1.1 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center"
-          >
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 1.15 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center">
             <a href="#work"
-              className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-white text-lg transition-all duration-300 hover:scale-105 neon-glow"
-              style={{ background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }}
-            >
-              <Play className="w-5 h-5 fill-white" />
-              Watch My Work
+              className="inline-flex items-center gap-3 px-9 py-4 rounded-full font-bold text-white text-lg hover:scale-105 transition-all duration-300 neon-glow"
+              style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>
+              <Play className="w-5 h-5 fill-white" /> Watch My Work
             </a>
             <a href="https://wa.me/923000000000" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center justify-center gap-3 px-8 py-4 rounded-full font-bold text-white text-lg glass transition-all duration-300 hover:bg-white/10 hover:scale-105"
-            >
-              <MessageCircle className="w-5 h-5 text-green-400" />
-              WhatsApp Me
+              className="inline-flex items-center gap-3 px-9 py-4 rounded-full font-bold text-white text-lg glass-dark hover:scale-105 transition-all duration-300 neon-glow-green">
+              <MessageCircle className="w-5 h-5 text-green-400" /> WhatsApp Me
             </a>
           </motion.div>
 
-          {/* Scroll ticker */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.6 }}
-            className="absolute bottom-[-120px] left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/30"
-          >
-            <span className="text-xs uppercase tracking-[0.3em]">Scroll</span>
-            <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>
-              <ArrowDown className="w-5 h-5" />
-            </motion.div>
+          {/* Video pause/play control */}
+          <motion.button initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.8 }}
+            onClick={toggleHeroVideo}
+            className="absolute bottom-[-90px] right-0 md:right-8 flex items-center gap-2 text-white/25 hover:text-white/60 transition-colors text-xs uppercase tracking-widest">
+            {heroVideoPaused ? <Play className="w-4 h-4"/> : <Pause className="w-4 h-4"/>}
+            {heroVideoPaused ? "Play" : "Pause"} Reel
+          </motion.button>
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 1.8 }}
+          className="absolute bottom-10 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2 text-white/25">
+          <span className="text-[10px] uppercase tracking-[0.35em]">Scroll</span>
+          <motion.div animate={{ y: [0, 8, 0] }} transition={{ repeat: Infinity, duration: 1.8 }}>
+            <ArrowDown className="w-4 h-4" />
           </motion.div>
         </motion.div>
+      </section>
+
+      {/* ── STATS ── */}
+      <section className="py-20 relative overflow-hidden" style={{ borderTop: "1px solid rgba(139,92,246,0.1)", borderBottom: "1px solid rgba(139,92,246,0.1)" }}>
+        <div className="absolute inset-0 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 80% 100% at 50% 50%, rgba(139,92,246,0.05), transparent)" }}/>
+        <div className="max-w-6xl mx-auto px-6 md:px-12">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            {stats.map((s, i) => (
+              <FadeIn key={s.label} delay={i * 0.1}>
+                <div className="stat-card rounded-2xl p-6 text-center group hover:scale-105 transition-all duration-300">
+                  <div className="flex justify-center mb-4">
+                    <div className="w-14 h-14 rounded-full flex items-center justify-center"
+                      style={{ background: `${s.color}22`, border: `1px solid ${s.color}44`, color: s.color }}>
+                      {s.icon}
+                    </div>
+                  </div>
+                  <div className="text-4xl font-black mb-1 gradient-text">
+                    <Counter target={s.value} suffix={s.suffix} />
+                  </div>
+                  <div className="text-white/40 text-sm uppercase tracking-widest font-medium">{s.label}</div>
+                </div>
+              </FadeIn>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* ── ABOUT ── */}
@@ -239,53 +435,41 @@ export default function Home() {
         <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-24">
           <FadeIn direction="left" className="w-full lg:w-2/5">
             <div className="relative max-w-sm mx-auto">
-              <div className="absolute inset-0 rounded-2xl opacity-30 blur-2xl"
-                style={{ background: "linear-gradient(135deg, #8b5cf6, #3b82f6)", transform: "translate(12px,12px)" }} />
-              <div className="absolute inset-0 rounded-2xl border border-purple-500/20 translate-x-4 translate-y-4" />
-              <img src={aboutPortrait} alt="Shoaib" className="relative w-full rounded-2xl object-cover aspect-[3/4] shadow-2xl grayscale hover:grayscale-0 transition-all duration-700" />
-              <div className="absolute -bottom-4 -right-4 rounded-xl px-5 py-3 font-black text-sm uppercase tracking-wider text-white shadow-lg neon-glow"
-                style={{ background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }}>
+              <div className="absolute inset-0 rounded-2xl blur-3xl opacity-25"
+                style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", transform: "translate(16px,16px) scale(0.95)" }}/>
+              <div className="absolute inset-0 rounded-2xl border border-purple-500/20 translate-x-5 translate-y-5"/>
+              <img src={aboutPortrait} alt="Shoaib" className="relative w-full rounded-2xl object-cover aspect-[3/4] shadow-2xl grayscale hover:grayscale-0 transition-all duration-700"/>
+              <div className="absolute -bottom-5 -right-5 rounded-xl px-5 py-3 font-black text-sm uppercase tracking-wider text-white neon-glow"
+                style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>
                 1 Year Exp.
               </div>
             </div>
           </FadeIn>
-
           <div className="w-full lg:w-3/5 space-y-6">
             <FadeIn delay={0.1} direction="right">
               <span className="gradient-text text-sm font-bold uppercase tracking-widest">About Me</span>
               <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mt-3 leading-tight">
-                Telling Stories <br /> <span className="gradient-text">Through Every Cut</span>
+                Telling Stories <br/><span className="gradient-text">Through Every Cut</span>
               </h2>
             </FadeIn>
-            <FadeIn delay={0.2} direction="right" className="space-y-4 text-white/55 text-lg leading-relaxed font-light">
-              <p>I'm Shoaib — a passionate video editor with 1 year of hands-on experience in Adobe Premiere Pro and CapCut. I believe raw footage is just the beginning; the magic happens in the edit.</p>
-              <p>From viral social media reels to polished cinematic productions, I bring creativity, precision, and storytelling instinct to every project. My mission is simple: make viewers feel something.</p>
+            <FadeIn delay={0.2} direction="right" className="space-y-4 text-white/55 text-lg leading-relaxed">
+              <p>I'm Shoaib — a passionate cinematic video editor with hands-on experience in Adobe Premiere Pro and CapCut. I believe raw footage is just the beginning; the real magic happens in the edit.</p>
+              <p>From viral social media reels to polished cinematic productions, I bring creativity, technical precision, and storytelling instinct to every frame.</p>
             </FadeIn>
-            <FadeIn delay={0.3} direction="right" className="grid grid-cols-3 gap-4 pt-4">
+            <FadeIn delay={0.3} direction="right" className="grid grid-cols-3 gap-4 pt-2">
               {[
                 { icon: <CheckCircle className="w-5 h-5 text-purple-400" />, label: "Fast Delivery" },
-                { icon: <CheckCircle className="w-5 h-5 text-blue-400" />, label: "Revisions Included" },
+                { icon: <CheckCircle className="w-5 h-5 text-blue-400"   />, label: "Revisions Included" },
                 { icon: <CheckCircle className="w-5 h-5 text-violet-400" />, label: "Quality First" },
               ].map(f => (
-                <div key={f.label} className="flex items-center gap-2 text-white/70 text-sm">
-                  {f.icon} {f.label}
-                </div>
-              ))}
-            </FadeIn>
-            <FadeIn delay={0.35} direction="right" className="flex gap-10 pt-4 border-t border-white/5">
-              {[{ v: "1+", l: "Year Exp." }, { v: "2", l: "Core Tools" }, { v: "100%", l: "Dedicated" }].map(s => (
-                <div key={s.l}>
-                  <div className="text-4xl font-black gradient-text">{s.v}</div>
-                  <div className="text-xs uppercase tracking-widest text-white/35 mt-1">{s.l}</div>
-                </div>
+                <div key={f.label} className="flex items-center gap-2 text-white/65 text-sm">{f.icon} {f.label}</div>
               ))}
             </FadeIn>
             <FadeIn delay={0.4} direction="right">
-              <a href="#contact"
+              <a href="https://wa.me/923000000000" target="_blank" rel="noopener noreferrer"
                 className="inline-flex items-center gap-2 px-8 py-4 rounded-full font-bold text-white transition-all duration-300 hover:scale-105 neon-glow"
-                style={{ background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }}
-              >
-                Hire Me <ChevronRight className="w-5 h-5" />
+                style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>
+                <MessageCircle className="w-5 h-5" /> Hire Me on WhatsApp
               </a>
             </FadeIn>
           </div>
@@ -293,37 +477,35 @@ export default function Home() {
       </section>
 
       {/* ── SKILLS ── */}
-      <section id="skills" className="py-28 relative overflow-hidden" style={{ background: "rgba(139,92,246,0.03)", borderTop: "1px solid rgba(139,92,246,0.08)", borderBottom: "1px solid rgba(139,92,246,0.08)" }}>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_40%_at_50%_0%,rgba(139,92,246,0.07),transparent)] pointer-events-none" />
+      <section id="skills" className="py-28 relative overflow-hidden"
+        style={{ background: "rgba(139,92,246,0.025)", borderTop: "1px solid rgba(139,92,246,0.08)", borderBottom: "1px solid rgba(139,92,246,0.08)" }}>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_40%_at_50%_0%,rgba(139,92,246,0.07),transparent)] pointer-events-none"/>
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
           <FadeIn className="text-center mb-16">
-            <span className="gradient-text text-sm font-bold uppercase tracking-widest">What I Do</span>
+            <span className="gradient-text text-sm font-bold uppercase tracking-widest">Expertise</span>
             <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mt-3">My Skills</h2>
           </FadeIn>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {skills.map((skill, i) => (
               <FadeIn key={skill.name} delay={i * 0.07}>
-                <div className="group p-6 rounded-2xl glass hover:border-purple-500/30 transition-all duration-400 space-y-4 cursor-default">
+                <div className="group p-6 rounded-2xl glass hover:border-purple-500/30 transition-all duration-400 space-y-4">
                   <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white transition-all duration-300 group-hover:scale-110"
-                      style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.3))", border: "1px solid rgba(139,92,246,0.3)" }}>
+                    <div className="w-12 h-12 rounded-xl flex items-center justify-center text-white transition-all duration-300 group-hover:scale-110 group-hover:neon-glow"
+                      style={{ background: "linear-gradient(135deg,rgba(139,92,246,0.3),rgba(59,130,246,0.3))", border: "1px solid rgba(139,92,246,0.35)" }}>
                       {skill.icon}
                     </div>
-                    <span className="text-white font-bold text-base">{skill.name}</span>
+                    <span className="text-white font-bold">{skill.name}</span>
                   </div>
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
-                      <span className="text-white/35 uppercase tracking-widest text-xs">Proficiency</span>
+                      <span className="text-white/30 uppercase tracking-widest text-xs">Proficiency</span>
                       <span className="gradient-text font-black">{skill.level}%</span>
                     </div>
                     <div className="h-1.5 w-full rounded-full overflow-hidden" style={{ background: "rgba(255,255,255,0.06)" }}>
                       <motion.div
-                        initial={{ width: 0 }}
-                        whileInView={{ width: `${skill.level}%` }}
-                        viewport={{ once: true }}
-                        transition={{ duration: 1.3, delay: i * 0.08, ease: "easeOut" }}
-                        className={`h-full rounded-full bg-gradient-to-r ${skill.color}`}
-                      />
+                        initial={{ width: 0 }} whileInView={{ width: `${skill.level}%` }} viewport={{ once: true }}
+                        transition={{ duration: 1.4, delay: i * 0.09, ease: "easeOut" }}
+                        className={`h-full rounded-full bg-gradient-to-r ${skill.color}`}/>
                     </div>
                   </div>
                 </div>
@@ -338,21 +520,18 @@ export default function Home() {
         <FadeIn className="text-center mb-10">
           <span className="gradient-text text-sm font-bold uppercase tracking-widest">Portfolio</span>
           <h2 className="text-4xl md:text-5xl font-black uppercase tracking-tighter text-white mt-3">Selected Work</h2>
-          <p className="text-white/40 mt-3 max-w-xl mx-auto">From social reels to cinematic films — every project is crafted with intention.</p>
+          <p className="text-white/35 mt-3 max-w-lg mx-auto text-sm">Hover any project to see a live video preview. Click to watch the full piece.</p>
         </FadeIn>
 
         {/* Category filters */}
         <FadeIn delay={0.1} className="flex flex-wrap justify-center gap-3 mb-12">
           {CATEGORIES.map(cat => (
-            <motion.button
-              key={cat}
-              onClick={() => setActiveCategory(cat)}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.97 }}
+            <motion.button key={cat} onClick={() => setActiveCategory(cat)}
+              whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.97 }}
               className="px-5 py-2.5 rounded-full text-sm font-bold uppercase tracking-wider transition-all duration-300"
               style={activeCategory === cat
-                ? { background: "linear-gradient(135deg, #8b5cf6, #3b82f6)", color: "white", boxShadow: "0 0 20px rgba(139,92,246,0.4)" }
-                : { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.5)", border: "1px solid rgba(255,255,255,0.08)" }
+                ? { background: "linear-gradient(135deg,#8b5cf6,#3b82f6)", color: "white", boxShadow: "0 0 25px rgba(139,92,246,0.45)" }
+                : { background: "rgba(255,255,255,0.04)", color: "rgba(255,255,255,0.45)", border: "1px solid rgba(255,255,255,0.08)" }
               }
             >
               {cat}
@@ -360,71 +539,19 @@ export default function Home() {
           ))}
         </FadeIn>
 
-        {/* Project grid */}
         <motion.div layout className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
             {filteredProjects.map((project, i) => (
-              <motion.div
-                key={project.id}
-                layout
-                initial={{ opacity: 0, scale: 0.92 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0, scale: 0.92 }}
-                transition={{ duration: 0.45, delay: i * 0.06 }}
-                className="group relative overflow-hidden rounded-2xl cursor-pointer"
-                style={{ border: "1px solid rgba(139,92,246,0.1)" }}
-                onClick={() => setPlayingId(playingId === project.id ? null : project.id)}
-              >
-                <div className="aspect-video overflow-hidden bg-black">
-                  <motion.img
-                    src={project.image}
-                    alt={project.title}
-                    className="w-full h-full object-cover transition-all duration-700"
-                    style={{ filter: "brightness(0.75)" }}
-                    whileHover={{ scale: 1.07, filter: "brightness(0.9)" }}
-                    transition={{ duration: 0.6 }}
-                  />
-                </div>
-
-                {/* Hover overlay */}
-                <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-400"
-                  style={{ background: "linear-gradient(to bottom, rgba(139,92,246,0.2), rgba(9,9,18,0.6))", backdropFilter: "blur(2px)" }}>
-                  <motion.div
-                    whileHover={{ scale: 1.15 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="w-18 h-18 rounded-full flex items-center justify-center shadow-2xl neon-glow"
-                    style={{ background: "linear-gradient(135deg, #8b5cf6, #3b82f6)", width: 72, height: 72 }}
-                  >
-                    <motion.div
-                      animate={{ scale: [1, 1.15, 1] }}
-                      transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-                    >
-                      <Play className="w-7 h-7 fill-white text-white ml-1" />
-                    </motion.div>
-                  </motion.div>
-                </div>
-
-                {/* Info bar */}
-                <div className="absolute bottom-0 left-0 right-0 p-5"
-                  style={{ background: "linear-gradient(to top, rgba(9,9,18,0.97) 0%, rgba(9,9,18,0.7) 60%, transparent)" }}>
-                  <div className="flex items-end justify-between">
-                    <div>
-                      <div className="gradient-text text-xs font-bold uppercase tracking-widest mb-1.5">{project.category}</div>
-                      <h3 className="text-white font-black text-lg leading-tight group-hover:gradient-text transition-all">{project.title}</h3>
-                      <p className="text-white/40 text-xs mt-1 line-clamp-1">{project.desc}</p>
-                    </div>
-                    <div className="text-white/30 text-xs font-mono glass px-2.5 py-1.5 rounded-lg shrink-0 ml-3">{project.duration}</div>
-                  </div>
-                </div>
-              </motion.div>
+              <VideoCard key={project.id} project={project} index={i} />
             ))}
           </AnimatePresence>
         </motion.div>
       </section>
 
       {/* ── SERVICES ── */}
-      <section id="services" className="py-28 relative overflow-hidden" style={{ background: "rgba(59,130,246,0.02)", borderTop: "1px solid rgba(59,130,246,0.08)", borderBottom: "1px solid rgba(59,130,246,0.08)" }}>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(59,130,246,0.06),transparent)] pointer-events-none" />
+      <section id="services" className="py-28 relative overflow-hidden"
+        style={{ background: "rgba(59,130,246,0.02)", borderTop: "1px solid rgba(59,130,246,0.08)", borderBottom: "1px solid rgba(59,130,246,0.08)" }}>
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_50%_100%,rgba(59,130,246,0.06),transparent)] pointer-events-none"/>
         <div className="max-w-7xl mx-auto px-6 md:px-12 relative z-10">
           <FadeIn className="text-center mb-16">
             <span className="gradient-text text-sm font-bold uppercase tracking-widest">What I Offer</span>
@@ -433,22 +560,25 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {services.map((s, i) => (
               <FadeIn key={s.title} delay={i * 0.1}>
-                <div className={`group p-8 rounded-2xl transition-all duration-400 cursor-default border bg-gradient-to-br ${s.color} ${s.border}`}
-                  style={{ backdropFilter: "blur(10px)" }}>
+                <div className="group p-8 rounded-2xl glass transition-all duration-400 cursor-default"
+                  style={{ border: `1px solid ${s.accent}22` }}
+                  onMouseEnter={e => (e.currentTarget.style.borderColor = `${s.accent}55`)}
+                  onMouseLeave={e => (e.currentTarget.style.borderColor = `${s.accent}22`)}>
                   <div className="flex items-start justify-between mb-5">
-                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-white transition-all duration-300 group-hover:scale-110 group-hover:neon-glow"
-                      style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.4), rgba(59,130,246,0.4))", border: "1px solid rgba(139,92,246,0.3)" }}>
+                    <div className="w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
+                      style={{ background: `${s.accent}18`, border: `1px solid ${s.accent}33`, color: s.accent }}>
                       {s.icon}
                     </div>
-                    <span className="text-xs font-black uppercase tracking-wider px-4 py-2 rounded-full gradient-text"
-                      style={{ border: "1px solid rgba(139,92,246,0.25)", background: "rgba(139,92,246,0.1)" }}>
+                    <span className="text-xs font-black uppercase tracking-wider px-4 py-2 rounded-full"
+                      style={{ background: `${s.accent}15`, color: s.accent, border: `1px solid ${s.accent}30` }}>
                       {s.price}
                     </span>
                   </div>
-                  <h3 className="text-white font-black text-xl uppercase tracking-tight mb-3 group-hover:gradient-text transition-all">{s.title}</h3>
+                  <h3 className="text-white font-black text-xl uppercase tracking-tight mb-3">{s.title}</h3>
                   <p className="text-white/45 leading-relaxed text-sm mb-5">{s.desc}</p>
-                  <a href="#contact" className="inline-flex items-center gap-2 gradient-text text-sm font-bold uppercase tracking-widest hover:gap-3 transition-all duration-300">
-                    Get Started <ChevronRight className="w-4 h-4" />
+                  <a href="#contact" className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest hover:gap-3 transition-all duration-300"
+                    style={{ color: s.accent }}>
+                    Get Started <ChevronRight className="w-4 h-4"/>
                   </a>
                 </div>
               </FadeIn>
@@ -466,25 +596,24 @@ export default function Home() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((t, i) => (
             <FadeIn key={t.name} delay={i * 0.12}>
-              <div className="p-7 rounded-2xl glass flex flex-col gap-5 h-full hover:border-purple-500/25 transition-all duration-400 group"
-                style={{ borderColor: "rgba(139,92,246,0.12)" }}>
+              <div className="group p-7 rounded-2xl glass flex flex-col gap-5 h-full transition-all duration-400 hover:border-purple-500/25 hover:scale-[1.02]">
                 <div className="flex items-center justify-between">
-                  <Quote className="w-8 h-8 text-purple-500/40 group-hover:text-purple-500/70 transition-colors" />
+                  <Quote className="w-8 h-8 text-purple-500/35 group-hover:text-purple-500/65 transition-colors"/>
                   <div className="flex gap-1">
                     {Array.from({ length: t.rating }).map((_, j) => (
-                      <Star key={j} className="w-4 h-4 fill-purple-400 text-purple-400" />
+                      <Star key={j} className="w-4 h-4 fill-purple-400 text-purple-400"/>
                     ))}
                   </div>
                 </div>
-                <p className="text-white/60 leading-relaxed text-sm flex-1 italic">"{t.review}"</p>
+                <p className="text-white/55 leading-relaxed text-sm flex-1 italic">"{t.review}"</p>
                 <div className="flex items-center gap-3 pt-4 border-t border-white/5">
                   <div className="w-11 h-11 rounded-full font-black text-sm text-white flex items-center justify-center shrink-0"
-                    style={{ background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }}>
+                    style={{ background: "linear-gradient(135deg,#8b5cf6,#3b82f6)" }}>
                     {t.avatar}
                   </div>
                   <div>
                     <div className="text-white font-bold text-sm">{t.name}</div>
-                    <div className="text-white/35 text-xs mt-0.5">{t.role}</div>
+                    <div className="text-white/30 text-xs mt-0.5">{t.role}</div>
                   </div>
                 </div>
               </div>
@@ -493,63 +622,66 @@ export default function Home() {
         </div>
       </section>
 
-      {/* ── CONTACT ── */}
-      <section id="contact" className="py-28 relative overflow-hidden" style={{ borderTop: "1px solid rgba(139,92,246,0.08)" }}>
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_60%_at_50%_50%,rgba(139,92,246,0.07),transparent)] pointer-events-none" />
-        <div className="max-w-4xl mx-auto px-6 md:px-12 text-center relative z-10">
-          <FadeIn>
-            <span className="gradient-text text-sm font-bold uppercase tracking-widest">Let's Work Together</span>
-            <h2 className="text-5xl md:text-7xl font-black uppercase tracking-tighter text-white mt-3 leading-tight">
-              Ready to Create <br /><span className="gradient-text neon-text">Something Epic?</span>
-            </h2>
-            <p className="text-white/40 mt-5 text-lg max-w-xl mx-auto">Have a project? Reach out — I respond fast and always deliver quality.</p>
-          </FadeIn>
-
-          <FadeIn delay={0.15} className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-14">
-            {[
-              { icon: <Mail className="w-6 h-6" />, label: "Email", value: "shoaib@email.com", href: "mailto:shoaib@email.com", glow: "hover:border-purple-500/40 hover:bg-purple-500/5", iconColor: "text-purple-400" },
-              { icon: <MessageCircle className="w-6 h-6" />, label: "WhatsApp", value: "Message directly", href: "https://wa.me/923000000000", glow: "hover:border-green-500/40 hover:bg-green-500/5", iconColor: "text-green-400" },
-              { icon: <Instagram className="w-6 h-6" />, label: "Instagram", value: "@shoaib.edits", href: "#", glow: "hover:border-pink-500/40 hover:bg-pink-500/5", iconColor: "text-pink-400" },
-            ].map(c => (
-              <a key={c.label} href={c.href} target={c.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
-                className={`group flex flex-col items-center gap-3 p-6 rounded-2xl glass border border-white/5 transition-all duration-300 ${c.glow}`}>
-                <div className={`w-14 h-14 rounded-full glass flex items-center justify-center ${c.iconColor} group-hover:scale-110 transition-transform`}>{c.icon}</div>
-                <div>
-                  <div className="text-white font-bold">{c.label}</div>
-                  <div className="text-white/35 text-xs mt-0.5">{c.value}</div>
-                </div>
-              </a>
-            ))}
-          </FadeIn>
-
-          <FadeIn delay={0.25} className="flex flex-wrap justify-center gap-3 mt-8">
-            {[
-              { icon: <Youtube className="w-4 h-4 text-red-400" />, label: "YouTube" },
-              { icon: <Twitter className="w-4 h-4 text-sky-400" />, label: "Twitter / X" },
-            ].map(s => (
-              <a key={s.label} href="#"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-white/40 glass border border-white/5 hover:text-white hover:border-white/20 transition-all duration-300">
-                {s.icon} {s.label}
-              </a>
-            ))}
-          </FadeIn>
-
-          <FadeIn delay={0.35} className="mt-12">
+      {/* ── CTA BANNER ── */}
+      <section className="py-24 px-6 md:px-12 relative overflow-hidden mx-6 md:mx-12 mb-12 rounded-3xl"
+        style={{ background: "linear-gradient(135deg, rgba(139,92,246,0.15) 0%, rgba(59,130,246,0.1) 50%, rgba(139,92,246,0.08) 100%)", border: "1px solid rgba(139,92,246,0.2)" }}>
+        <div className="absolute inset-0 rounded-3xl pointer-events-none"
+          style={{ background: "radial-gradient(ellipse 80% 80% at 50% 50%, rgba(139,92,246,0.08), transparent)" }}/>
+        <FadeIn className="text-center relative z-10">
+          <h2 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white mb-4">
+            Have a Project? <br/><span className="gradient-text">Let's Create Together.</span>
+          </h2>
+          <p className="text-white/45 text-lg mb-10 max-w-xl mx-auto">I'm open for new collaborations. Fast delivery, professional results, 100% dedication.</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <a href="https://wa.me/923000000000" target="_blank" rel="noopener noreferrer"
-              className="inline-flex items-center gap-3 px-12 py-5 rounded-full font-black text-white text-lg transition-all duration-300 hover:scale-105 neon-glow"
-              style={{ background: "linear-gradient(135deg, #8b5cf6, #3b82f6)" }}
-            >
-              <MessageCircle className="w-6 h-6" /> Hire Me on WhatsApp
+              className="inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full font-black text-white text-lg hover:scale-105 transition-all duration-300 neon-glow-green"
+              style={{ background: "linear-gradient(135deg,#22c55e,#16a34a)" }}>
+              <MessageCircle className="w-6 h-6"/> Hire Me on WhatsApp
             </a>
-          </FadeIn>
-        </div>
+            <a href="mailto:shoaib@email.com"
+              className="inline-flex items-center justify-center gap-3 px-10 py-5 rounded-full font-black text-white text-lg glass-dark hover:scale-105 transition-all duration-300">
+              <Mail className="w-6 h-6"/> Send an Email
+            </a>
+          </div>
+        </FadeIn>
+      </section>
+
+      {/* ── CONTACT ── */}
+      <section id="contact" className="py-20 px-6 md:px-12 max-w-4xl mx-auto">
+        <FadeIn className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-10">
+          {[
+            { icon: <Mail className="w-6 h-6"/>,            label: "Email",     value: "shoaib@email.com",      href: "mailto:shoaib@email.com",               col: "hover:border-purple-500/40" },
+            { icon: <MessageCircle className="w-6 h-6"/>,   label: "WhatsApp",  value: "Message me directly",   href: "https://wa.me/923000000000",            col: "hover:border-green-500/40" },
+            { icon: <Instagram className="w-6 h-6"/>,       label: "Instagram", value: "@shoaib.edits",          href: "#",                                     col: "hover:border-pink-500/40" },
+          ].map(c => (
+            <a key={c.label} href={c.href} target={c.href.startsWith("http") ? "_blank" : undefined} rel="noopener noreferrer"
+              className={`group flex flex-col items-center gap-3 p-6 rounded-2xl glass border border-white/5 transition-all duration-300 text-center ${c.col} hover:scale-105`}>
+              <div className="w-14 h-14 rounded-full glass flex items-center justify-center text-purple-400 group-hover:text-white group-hover:neon-glow group-hover:gradient-bg transition-all duration-300">{c.icon}</div>
+              <div>
+                <div className="text-white font-bold">{c.label}</div>
+                <div className="text-white/30 text-xs mt-0.5">{c.value}</div>
+              </div>
+            </a>
+          ))}
+        </FadeIn>
+        <FadeIn delay={0.1} className="flex flex-wrap justify-center gap-3">
+          {[
+            { icon: <Youtube className="w-4 h-4 text-red-400"/>, label: "YouTube" },
+            { icon: <Twitter className="w-4 h-4 text-sky-400"/>, label: "Twitter / X" },
+          ].map(s => (
+            <a key={s.label} href="#"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full text-sm text-white/40 glass border border-white/5 hover:text-white hover:border-white/20 transition-all duration-300">
+              {s.icon} {s.label}
+            </a>
+          ))}
+        </FadeIn>
       </section>
 
       {/* ── FOOTER ── */}
       <footer className="py-8 px-6 md:px-12" style={{ borderTop: "1px solid rgba(139,92,246,0.08)" }}>
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4 text-sm text-white/25">
-          <div className="font-black uppercase tracking-tighter text-white/60">Shoaib<span className="gradient-text">.</span></div>
-          <div>© {new Date().getFullYear()} Shoaib. All rights reserved. Built with passion.</div>
+          <div className="font-black uppercase tracking-tighter text-white/60 text-lg">Shoaib<span className="gradient-text">.</span></div>
+          <div>© {new Date().getFullYear()} Shoaib. All rights reserved. Crafted with passion.</div>
           <div className="flex gap-6">
             {["Instagram", "YouTube", "WhatsApp"].map(l => (
               <a key={l} href="#" className="hover:text-purple-400 transition-colors">{l}</a>
