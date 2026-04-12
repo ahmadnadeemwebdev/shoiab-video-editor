@@ -219,10 +219,10 @@ const skills = [
 ];
 
 const services = [
-  { icon: <Youtube className="w-7 h-7" />, title: "YouTube Editing",    desc: "Long-form content with clean cuts, dynamic graphics, and pacing that keeps viewers hooked.",          price: "From $25", accent: "#ef4444" },
-  { icon: <Zap className="w-7 h-7" />,     title: "Reels & TikTok",     desc: "Trend-driven viral clips with hooks, sound-synced cuts, and platform-optimized formats.",              price: "From $10", accent: "#8b5cf6" },
-  { icon: <Film className="w-7 h-7" />,    title: "Cinematic Videos",   desc: "Premium film-grade productions with rich color grading, sound design, and narrative power.",           price: "From $50", accent: "#3b82f6" },
-  { icon: <Star className="w-7 h-7" />,    title: "Wedding Edits",      desc: "Timeless, emotionally charged wedding films that capture every moment for a lifetime.",                price: "From $80", accent: "#ec4899" },
+  { icon: <Youtube className="w-7 h-7" />, title: "YouTube Editing",    desc: "Long-form content with clean cuts, dynamic graphics, and pacing that keeps viewers hooked.",          accent: "#ef4444" },
+  { icon: <Zap className="w-7 h-7" />,     title: "Reels & TikTok",     desc: "Trend-driven viral clips with hooks, sound-synced cuts, and platform-optimized formats.",              accent: "#8b5cf6" },
+  { icon: <Film className="w-7 h-7" />,    title: "Cinematic Videos",   desc: "Premium film-grade productions with rich color grading, sound design, and narrative power.",           accent: "#3b82f6" },
+  { icon: <Star className="w-7 h-7" />,    title: "Wedding Edits",      desc: "Timeless, emotionally charged wedding films that capture every moment for a lifetime.",                accent: "#ec4899" },
 ];
 
 const testimonials = [
@@ -564,15 +564,11 @@ export default function Home() {
                   style={{ border: `1px solid ${s.accent}22` }}
                   onMouseEnter={e => (e.currentTarget.style.borderColor = `${s.accent}55`)}
                   onMouseLeave={e => (e.currentTarget.style.borderColor = `${s.accent}22`)}>
-                  <div className="flex items-start justify-between mb-5">
+                  <div className="mb-5">
                     <div className="w-16 h-16 rounded-2xl flex items-center justify-center transition-all duration-300 group-hover:scale-110"
                       style={{ background: `${s.accent}18`, border: `1px solid ${s.accent}33`, color: s.accent }}>
                       {s.icon}
                     </div>
-                    <span className="text-xs font-black uppercase tracking-wider px-4 py-2 rounded-full"
-                      style={{ background: `${s.accent}15`, color: s.accent, border: `1px solid ${s.accent}30` }}>
-                      {s.price}
-                    </span>
                   </div>
                   <h3 className="text-white font-black text-xl uppercase tracking-tight mb-3">{s.title}</h3>
                   <p className="text-white/45 leading-relaxed text-sm mb-5">{s.desc}</p>
