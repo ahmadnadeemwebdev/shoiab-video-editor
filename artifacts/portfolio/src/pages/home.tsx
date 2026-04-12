@@ -23,7 +23,7 @@ export default function Home() {
     <div className="min-h-screen bg-background text-foreground overflow-hidden selection:bg-primary selection:text-black">
       {/* Navigation */}
       <nav className="fixed top-0 w-full z-50 mix-blend-difference px-8 py-6 flex justify-between items-center text-white">
-        <div className="text-xl font-bold tracking-tighter uppercase">Alex Mercer</div>
+        <div className="text-xl font-bold tracking-tighter uppercase">Shoaib</div>
         <div className="hidden md:flex gap-8 text-sm font-medium tracking-widest uppercase">
           <a href="#work" className="hover:text-primary transition-colors">Work</a>
           <a href="#expertise" className="hover:text-primary transition-colors">Expertise</a>
@@ -66,7 +66,7 @@ export default function Home() {
             transition={{ duration: 1, delay: 1 }}
             className="text-lg md:text-xl text-white/70 max-w-2xl font-light"
           >
-            Senior Video Editor specializing in high-end commercial, narrative, and music video storytelling.
+            Video Editor specializing in dynamic storytelling using Premiere Pro and CapCut.
           </motion.p>
           
           <motion.button
@@ -164,9 +164,9 @@ export default function Home() {
             
             <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-2 gap-12">
               {[
-                { icon: <Film className="w-8 h-8 text-primary" />, title: "Offline Editing", desc: "Crafting the narrative spine with precision pacing and structural intuition using Premiere Pro & Avid." },
-                { icon: <Video className="w-8 h-8 text-primary" />, title: "Color Grading", desc: "Setting the emotional tone through cinematic color palettes in DaVinci Resolve." },
-                { icon: <Scissors className="w-8 h-8 text-primary" />, title: "VFX & Compositing", desc: "Seamless integration and motion graphics using After Effects and Nuke." }
+                { icon: <Film className="w-8 h-8 text-primary" />, title: "Premiere Pro", desc: "Professional-grade video editing, multi-track timelines, color correction, and seamless workflow in Adobe Premiere Pro." },
+                { icon: <Scissors className="w-8 h-8 text-primary" />, title: "CapCut", desc: "Fast-paced, trend-driven editing with dynamic effects, transitions, and music sync tailored for social platforms." },
+                { icon: <Video className="w-8 h-8 text-primary" />, title: "Storytelling", desc: "Turning raw footage into compelling visual narratives that connect with audiences and leave a lasting impression." }
               ].map((skill, i) => (
                 <motion.div 
                   key={i}
@@ -200,7 +200,7 @@ export default function Home() {
           >
             <div className="relative aspect-[3/4] max-w-md mx-auto">
               <div className="absolute inset-0 bg-primary/20 translate-x-4 translate-y-4 -z-10 border border-primary/30"></div>
-              <img src={aboutPortrait} alt="Alex Mercer" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
+              <img src={aboutPortrait} alt="Shoaib" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-700" />
             </div>
           </motion.div>
           
@@ -215,28 +215,28 @@ export default function Home() {
             
             <div className="space-y-6 text-lg text-muted-foreground font-light">
               <p>
-                I don't just cut footage together. I sculpt emotion out of raw time. For the past decade, I've lived in the dark, obsessing over the precise moment a scene breathes, breaks, or ignites.
+                I don't just cut footage together — I shape moments into stories that move people. In my first year, I've committed myself fully to the craft, learning every frame, every cut, every transition with intention.
               </p>
               <p>
-                Whether it's a high-octane commercial for a luxury automotive brand, or a quiet, introspective indie film, my philosophy remains the same: the edit should be invisible, but the feeling should be overwhelming.
+                Whether it's a punchy short-form reel on CapCut or a polished, layered production in Premiere Pro, my goal is always the same: make the viewer feel something before they realize why.
               </p>
               <p>
-                Based in Los Angeles. Working globally.
+                Growing fast. Working hard. Just getting started.
               </p>
             </div>
             
             <div className="pt-8 flex gap-8 border-t border-white/10">
               <div>
-                <div className="text-3xl font-black text-white">10+</div>
-                <div className="text-xs uppercase tracking-widest text-primary mt-1">Years Exp.</div>
+                <div className="text-3xl font-black text-white">1</div>
+                <div className="text-xs uppercase tracking-widest text-primary mt-1">Year Exp.</div>
               </div>
               <div>
-                <div className="text-3xl font-black text-white">150+</div>
-                <div className="text-xs uppercase tracking-widest text-primary mt-1">Projects</div>
+                <div className="text-3xl font-black text-white">2</div>
+                <div className="text-xs uppercase tracking-widest text-primary mt-1">Core Tools</div>
               </div>
               <div>
-                <div className="text-3xl font-black text-white">3</div>
-                <div className="text-xs uppercase tracking-widest text-primary mt-1">Industry Awards</div>
+                <div className="text-3xl font-black text-white">100%</div>
+                <div className="text-xs uppercase tracking-widest text-primary mt-1">Dedication</div>
               </div>
             </div>
           </motion.div>
@@ -255,14 +255,14 @@ export default function Home() {
         >
           <h2 className="text-5xl md:text-8xl font-black uppercase tracking-tighter text-white">Let's Create<br/>Something <span className="text-primary">Epic.</span></h2>
           
-          <p className="text-xl text-muted-foreground">Currently accepting inquiries for Q4 2024.</p>
+          <p className="text-xl text-muted-foreground">Open to new projects and collaborations.</p>
           
-          <a href="mailto:hello@alexmercer.com" className="inline-block px-12 py-6 bg-white text-black font-black uppercase tracking-widest text-lg hover:bg-primary transition-colors duration-300">
+          <a href="mailto:shoaib@email.com" className="inline-block px-12 py-6 bg-white text-black font-black uppercase tracking-widest text-lg hover:bg-primary transition-colors duration-300">
             Get In Touch
           </a>
           
           <div className="pt-20 flex flex-col md:flex-row justify-between items-center gap-6 text-sm text-muted-foreground uppercase tracking-widest">
-            <div>© {new Date().getFullYear()} Alex Mercer. All Rights Reserved.</div>
+            <div>© {new Date().getFullYear()} Shoaib. All Rights Reserved.</div>
             <div className="flex gap-6">
               <a href="#" className="hover:text-primary transition-colors">Instagram</a>
               <a href="#" className="hover:text-primary transition-colors">Vimeo</a>
