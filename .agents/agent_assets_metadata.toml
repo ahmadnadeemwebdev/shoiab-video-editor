@@ -1,0 +1,32 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "GQxFtX36gsI_UT8rjUi3S"
+uri = "file://artifacts/portfolio/src/assets/hero-bg.png"
+type = "image"
+title = "Cinematic film editing suite"
+
+[[generated]]
+id = "FKBjEYOpwvd6TBSJIS8n1"
+uri = "file://artifacts/portfolio/src/assets/project-1.png"
+type = "image"
+title = "Neon music video still"
+
+[[generated]]
+id = "3Ql7eIpsNmOVFdvLG1Giu"
+uri = "file://artifacts/portfolio/src/assets/project-2.png"
+type = "image"
+title = "Commercial car ad still"
+
+[[generated]]
+id = "F3TuPS6WMoi_htrc8gN5j"
+uri = "file://artifacts/portfolio/src/assets/project-3.png"
+type = "image"
+title = "Indie film still"
+
+[[generated]]
+id = "VsE5aESBtauDn3kP_QFhG"
+uri = "file://artifacts/portfolio/src/assets/about-portrait.png"
+type = "image"
+title = "Portrait of video editor"
