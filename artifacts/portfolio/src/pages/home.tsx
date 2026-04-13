@@ -529,7 +529,7 @@ export default function Home() {
 
               <Reveal delay={0.15} className="space-y-4 text-[15px] leading-relaxed"
                 style={{ color:"rgba(255,255,255,0.48)" }}>
-                <p>I'm Shoaib — a cinematic video editor specialising in Adobe Premiere Pro and CapCut. With 1 year of intense, focused experience, I've built a reputation for edits that don't just look good — they make people feel something.</p>
+                <p>I'm Shoaib — a cinematic video editor specialising in Adobe Premiere Pro, CapCut, and Canva. With 1 year of intense, focused experience, I've built a reputation for edits that don't just look good — they make people feel something.</p>
                 <p>Whether it's a 28-second viral reel or a 12-minute documentary, I bring the same obsessive attention to pacing, colour, and emotion to every single frame.</p>
               </Reveal>
 
@@ -537,10 +537,11 @@ export default function Home() {
                 {[
                   { tool:"Adobe Premiere Pro", col:"#8b5cf6" },
                   { tool:"CapCut",             col:"#06b6d4" },
-                  { tool:"Colour Grading",     col:"#8b5cf6" },
-                  { tool:"Motion Graphics",    col:"#06b6d4" },
-                  { tool:"Sound Design",       col:"#8b5cf6" },
-                  { tool:"Beat Syncing",       col:"#06b6d4" },
+                  { tool:"Canva",              col:"#8b5cf6" },
+                  { tool:"Colour Grading",     col:"#06b6d4" },
+                  { tool:"Motion Graphics",    col:"#8b5cf6" },
+                  { tool:"Sound Design",       col:"#06b6d4" },
+                  { tool:"Beat Syncing",       col:"#8b5cf6" },
                 ].map(t=>(
                   <div key={t.tool} className="flex items-center gap-3 text-sm" style={{ color:"rgba(255,255,255,0.6)" }}>
                     <div className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background:t.col }}/>
