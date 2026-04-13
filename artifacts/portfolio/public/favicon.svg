@@ -1,3 +1,30 @@
-<svg width="180" height="180" viewBox="0 0 180 180" fill="none" xmlns="http://www.w3.org/2000/svg">
-<rect width="180" height="180" rx="36" fill="#FF3C00"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#1a0a2e"/>
+      <stop offset="100%" stop-color="#0a1628"/>
+    </linearGradient>
+    <linearGradient id="grad" x1="0" y1="0" x2="64" y2="64" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#a78bfa"/>
+      <stop offset="55%" stop-color="#8b5cf6"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Dark background -->
+  <rect width="64" height="64" rx="14" fill="url(#bg)"/>
+
+  <!-- Gradient border -->
+  <rect x="1" y="1" width="62" height="62" rx="13" stroke="url(#grad)" stroke-width="1.5" stroke-opacity="0.55" fill="none"/>
+
+  <!-- Stylised S path — clean geometric letter -->
+  <path d="M38 20H26C23.8 20 22 21.8 22 24C22 26.2 23.8 28 26 28H38C40.2 28 42 29.8 42 32C42 34.2 40.2 36 38 36H26C23.8 36 22 37.8 22 40C22 42.2 23.8 44 26 44H38"
+    stroke="url(#grad)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round" fill="none" filter="url(#glow)"/>
 </svg>
