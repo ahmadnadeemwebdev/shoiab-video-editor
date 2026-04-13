@@ -230,8 +230,9 @@ export default function Home() {
 
       {/* ── Cursor glow ── */}
       <motion.div className="fixed pointer-events-none z-[9999] rounded-full"
-        style={{ left:cx, top:cy, width:400, height:400,
-          background:"radial-gradient(circle, rgba(139,92,246,0.06) 0%, transparent 70%)" }}/>
+        style={{ left:cx, top:cy, width:500, height:500,
+          background:"radial-gradient(circle, rgba(139,92,246,0.11) 0%, rgba(6,182,212,0.04) 40%, transparent 70%)",
+          filter:"blur(8px)" }}/>
 
       {/* ── NAV ── */}
       <motion.header
@@ -300,20 +301,29 @@ export default function Home() {
         {/* BG video */}
         <motion.div style={{ y:heroY, scale:heroSc }} className="absolute inset-0 z-0">
           <video ref={heroVid} autoPlay muted loop playsInline poster={heroBg}
-            className="w-full h-full object-cover" style={{ filter:"brightness(0.35) saturate(1.2)" }}>
+            className="w-full h-full object-cover" style={{ filter:"brightness(0.3) saturate(1.3)" }}>
             <source src={REEL_VIDEO} type="video/mp4"/>
             <img src={heroBg} alt="" className="w-full h-full object-cover"/>
           </video>
-          {/* Overlays */}
-          <div className="absolute inset-0" style={{ background:"linear-gradient(to top, #050507 0%, rgba(5,5,7,0.6) 35%, rgba(5,5,7,0.1) 65%, rgba(5,5,7,0.4) 100%)" }}/>
-          <div className="absolute inset-0" style={{ background:"radial-gradient(ellipse 90% 60% at 15% 80%, rgba(139,92,246,0.1), transparent 60%)" }}/>
+          {/* Base overlay */}
+          <div className="absolute inset-0" style={{ background:"linear-gradient(to top, #050507 0%, rgba(5,5,7,0.65) 35%, rgba(5,5,7,0.1) 65%, rgba(5,5,7,0.5) 100%)" }}/>
+          {/* Ambient purple orb — bottom left */}
+          <div className="absolute blob-a pointer-events-none"
+            style={{ left:"-10%", bottom:"-5%", width:"65vw", height:"65vw", borderRadius:"50%",
+              background:"radial-gradient(circle, rgba(139,92,246,0.22) 0%, rgba(99,57,230,0.1) 40%, transparent 70%)",
+              filter:"blur(60px)" }}/>
+          {/* Ambient cyan orb — top right */}
+          <div className="absolute blob-b pointer-events-none"
+            style={{ right:"-15%", top:"-10%", width:"55vw", height:"55vw", borderRadius:"50%",
+              background:"radial-gradient(circle, rgba(6,182,212,0.14) 0%, rgba(6,182,212,0.06) 40%, transparent 70%)",
+              filter:"blur(80px)" }}/>
         </motion.div>
 
-        {/* Left accent bar */}
-        <motion.div className="absolute left-6 top-1/4 bottom-1/4 w-px z-20 pointer-events-none"
+        {/* Left accent bar — glowing */}
+        <motion.div className="absolute left-6 top-1/4 bottom-1/4 w-px z-20 pointer-events-none accent-bar"
           initial={{ scaleY:0, opacity:0 }} animate={{ scaleY:1, opacity:1 }}
           transition={{ duration:1.2, delay:1.5, ease:[0.16,1,0.3,1] }}
-          style={{ background:"linear-gradient(to bottom, transparent, #8b5cf6, #06b6d4, transparent)", transformOrigin:"top" }}/>
+          style={{ transformOrigin:"top" }}/>
 
         {/* Vertical label */}
         <motion.div className="absolute left-9 top-1/2 -translate-y-1/2 z-20 pointer-events-none hidden md:block"
@@ -334,15 +344,19 @@ export default function Home() {
           </motion.div>
 
           {/* Main title */}
-          <h1 className="display-text mb-4" style={{ fontSize:"clamp(4rem,14vw,13rem)", lineHeight:0.9 }}>
+          <h1 className="display-text mb-4 text-glow-purple" style={{ fontSize:"clamp(4rem,14vw,13rem)", lineHeight:0.9 }}>
             <RevealTitle text="SHOAIB" delay={0.3}/>
           </h1>
 
-          {/* Divider line */}
+          {/* Divider line — glowing */}
           <motion.div className="h-px mb-5 max-w-lg"
             initial={{ scaleX:0 }} animate={{ scaleX:1 }}
             transition={{ duration:0.9, delay:1.1, ease:[0.16,1,0.3,1] }}
-            style={{ background:"linear-gradient(to right,#8b5cf6,#06b6d4,transparent)", transformOrigin:"left" }}/>
+            style={{
+              background:"linear-gradient(to right,#8b5cf6,#06b6d4,transparent)",
+              transformOrigin:"left",
+              boxShadow:"0 0 12px rgba(139,92,246,0.7), 0 0 30px rgba(6,182,212,0.3)"
+            }}/>
 
           <motion.div initial={{ opacity:0, y:20 }} animate={{ opacity:1, y:0 }} transition={{ delay:1.2 }}>
             <p className="text-xl md:text-2xl font-light italic mb-2" style={{ color:"rgba(255,255,255,0.5)" }}>
@@ -394,13 +408,21 @@ export default function Home() {
       </section>
 
       {/* ── TICKER ── */}
-      <div className="py-3 ticker-wrap relative overflow-hidden"
-        style={{ background:"linear-gradient(90deg,rgba(139,92,246,0.1),rgba(6,182,212,0.08),rgba(139,92,246,0.1))", borderTop:"1px solid rgba(139,92,246,0.2)", borderBottom:"1px solid rgba(6,182,212,0.15)" }}>
+      <div className="py-3.5 ticker-wrap relative overflow-hidden"
+        style={{
+          background:"linear-gradient(90deg,rgba(139,92,246,0.12) 0%,rgba(6,182,212,0.07) 50%,rgba(139,92,246,0.12) 100%)",
+          borderTop:"1px solid rgba(139,92,246,0.3)",
+          borderBottom:"1px solid rgba(6,182,212,0.2)",
+          boxShadow:"0 0 30px rgba(139,92,246,0.08), inset 0 1px 0 rgba(255,255,255,0.04)"
+        }}>
         <div className="ticker-track">
           {[...TICKER_ITEMS,...TICKER_ITEMS,...TICKER_ITEMS,...TICKER_ITEMS].map((t,i)=>(
             <span key={i} className="inline-flex items-center gap-3 mx-5"
-              style={{ fontSize:"10px", fontWeight:700, letterSpacing:"0.22em", color:i%2===0?"rgba(167,139,250,0.65)":"rgba(34,211,238,0.45)" }}>
-              {t} <span style={{ color:"rgba(255,255,255,0.12)" }}>◆</span>
+              style={{ fontSize:"10px", fontWeight:700, letterSpacing:"0.24em",
+                color:i%2===0?"rgba(192,132,252,0.75)":"rgba(34,211,238,0.55)" }}>
+              {t}
+              <span style={{ color:i%2===0?"rgba(139,92,246,0.5)":"rgba(6,182,212,0.4)",
+                textShadow:i%2===0?"0 0 8px rgba(139,92,246,0.8)":"0 0 8px rgba(6,182,212,0.8)" }}>◆</span>
             </span>
           ))}
         </div>
@@ -408,26 +430,29 @@ export default function Home() {
 
       {/* ── STATS strip ── */}
       <div className="py-16 px-6 md:px-16 max-w-[1400px] mx-auto">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-0 divide-y-0 md:divide-x"
-          style={{ borderColor:"rgba(255,255,255,0.06)" }}>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            {v:20,sfx:"+",lbl:"Projects Delivered"},
-            {v:15,sfx:"+",lbl:"Happy Clients"},
-            {v:1, sfx:"+",lbl:"Year Experience"},
-            {v:100,sfx:"%",lbl:"Client Satisfaction"},
+            {v:20,sfx:"+",lbl:"Projects Delivered", col:"#8b5cf6"},
+            {v:15,sfx:"+",lbl:"Happy Clients",       col:"#06b6d4"},
+            {v:1, sfx:"+",lbl:"Year Experience",      col:"#8b5cf6"},
+            {v:100,sfx:"%",lbl:"Client Satisfaction", col:"#06b6d4"},
           ].map((s,i)=>(
-            <Reveal key={s.lbl} delay={i*0.08} className="flex flex-col items-center md:items-start md:px-10 gap-2 text-center md:text-left">
-              <div className="display-text text-grad" style={{ fontSize:"clamp(2.5rem,6vw,4.5rem)" }}>
-                <Count to={s.v} suffix={s.sfx}/>
+            <Reveal key={s.lbl} delay={i*0.09}>
+              <div className="stat-shine rounded-xl p-7 flex flex-col gap-3 text-center md:text-left transition-all duration-400 cursor-default">
+                <div className="display-text" style={{ fontSize:"clamp(2.2rem,5vw,4rem)", color:s.col,
+                  textShadow:`0 0 30px ${s.col}60, 0 0 60px ${s.col}25` }}>
+                  <Count to={s.v} suffix={s.sfx}/>
+                </div>
+                <div className="label-text">{s.lbl}</div>
               </div>
-              <div className="label-text">{s.lbl}</div>
             </Reveal>
           ))}
         </div>
       </div>
 
       {/* ── WORK ── */}
-      <section id="work" className="mt-8" style={{ borderTop:"1px solid rgba(255,255,255,0.05)" }}>
+      <section id="work" className="mt-8 relative">
+        <div className="depth-divider"/>
         <div className="px-6 md:px-16 max-w-[1400px] mx-auto py-16">
           <Reveal className="flex items-end justify-between mb-12 flex-wrap gap-4">
             <div>
@@ -470,14 +495,20 @@ export default function Home() {
             {/* Photo */}
             <Reveal dir="left" className="relative">
               <div className="relative max-w-sm">
-                <div className="absolute inset-0 rounded-2xl opacity-15 blur-3xl"
-                  style={{ background:"linear-gradient(135deg,#8b5cf6,#06b6d4)", transform:"translate(24px,24px)" }}/>
-                <div className="absolute translate-x-6 translate-y-6 inset-0 rounded-2xl"
-                  style={{ border:"1px solid rgba(139,92,246,0.2)" }}/>
+                {/* Deep glow blob behind portrait */}
+                <div className="absolute -inset-8 rounded-3xl pointer-events-none"
+                  style={{ background:"radial-gradient(ellipse 80% 80% at 50% 60%, rgba(139,92,246,0.25), rgba(6,182,212,0.08) 60%, transparent 80%)", filter:"blur(40px)", zIndex:0 }}/>
+                {/* Offset border frame */}
+                <div className="absolute translate-x-5 translate-y-5 inset-0 rounded-2xl"
+                  style={{ border:"1px solid rgba(139,92,246,0.3)", zIndex:0 }}/>
+                {/* Second offset border */}
+                <div className="absolute translate-x-10 translate-y-10 inset-0 rounded-2xl"
+                  style={{ border:"1px solid rgba(6,182,212,0.1)", zIndex:0 }}/>
                 <img src={aboutImg} alt="Shoaib"
-                  className="relative w-full rounded-2xl object-cover aspect-[3/4] shadow-2xl grayscale hover:grayscale-0 transition-all duration-700"/>
+                  className="relative w-full rounded-2xl object-cover aspect-[3/4] grayscale hover:grayscale-0 transition-all duration-700"
+                  style={{ zIndex:1, boxShadow:"0 0 0 1px rgba(139,92,246,0.2), 0 20px 60px rgba(0,0,0,0.7), 0 0 40px rgba(139,92,246,0.08)" }}/>
                 <div className="absolute -bottom-5 -right-5 px-5 py-3 rounded-xl font-black text-sm text-white uppercase tracking-wider glow-purple"
-                  style={{ background:"linear-gradient(135deg,#8b5cf6,#06b6d4)" }}>
+                  style={{ background:"linear-gradient(135deg,#8b5cf6,#06b6d4)", zIndex:2 }}>
                   Based in Pakistan
                 </div>
               </div>
@@ -538,33 +569,53 @@ export default function Home() {
             <span className="label-text">Services</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-px" style={{ border:"1px solid rgba(255,255,255,0.05)" }}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-px"
+            style={{ border:"1px solid rgba(255,255,255,0.06)", borderRadius:"1rem", overflow:"hidden" }}>
             {SERVICES.map((s,i)=>(
               <Reveal key={s.title} delay={i*0.08}>
-                <div className="group p-10 relative overflow-hidden transition-all duration-400 cursor-default h-full"
-                  style={{ background:"#030305", borderColor:"rgba(255,255,255,0.04)" }}
-                  onMouseEnter={e=>{e.currentTarget.style.background="#0a0a10";}}
-                  onMouseLeave={e=>{e.currentTarget.style.background="#030305";}}>
-                  {/* Left accent line */}
-                  <div className="absolute left-0 top-8 bottom-8 w-0.5 transition-all duration-400"
-                    style={{ background:`linear-gradient(to bottom,transparent,${s.col},transparent)`, opacity:0.5 }}/>
-                  <div className="absolute left-0 top-8 bottom-8 w-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-400"
-                    style={{ background:`linear-gradient(to bottom,transparent,${s.col},transparent)`, filter:"blur(4px)" }}/>
+                <div className="group p-10 relative overflow-hidden transition-all duration-500 cursor-default h-full spotlight"
+                  style={{ background:"#08080d" }}
+                  onMouseEnter={e=>{
+                    e.currentTarget.style.background="#0d0d18";
+                    e.currentTarget.style.boxShadow=`inset 0 0 60px ${s.col}0a, 0 0 0 1px ${s.col}20`;
+                  }}
+                  onMouseLeave={e=>{
+                    e.currentTarget.style.background="#08080d";
+                    e.currentTarget.style.boxShadow="none";
+                  }}>
 
-                  {/* Background ghost number */}
-                  <div className="absolute -top-2 -right-2 font-black text-[5rem] leading-none pointer-events-none select-none"
-                    style={{ color:"rgba(255,255,255,0.02)", fontFamily:"Space Grotesk" }}>0{i+1}</div>
+                  {/* Left accent — solid + blur glow */}
+                  <div className="absolute left-0 top-6 bottom-6 w-0.5"
+                    style={{ background:`linear-gradient(to bottom,transparent,${s.col},transparent)`, opacity:0.6 }}/>
+                  <div className="absolute left-0 top-6 bottom-6 w-1 opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{ background:`linear-gradient(to bottom,transparent,${s.col},transparent)`, filter:"blur(6px)" }}/>
+
+                  {/* Top border glow */}
+                  <div className="absolute top-0 left-6 right-6 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{ background:`linear-gradient(to right,transparent,${s.col},transparent)`,
+                      boxShadow:`0 0 12px ${s.col}` }}/>
+
+                  {/* Ghost number */}
+                  <div className="absolute -bottom-4 -right-2 font-black text-[6rem] leading-none pointer-events-none select-none"
+                    style={{ color:"rgba(255,255,255,0.025)", fontFamily:"Space Grotesk" }}>0{i+1}</div>
 
                   <div className="relative z-10">
-                    <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-all duration-300 group-hover:scale-110"
-                      style={{ background:`${s.col}14`, border:`1px solid ${s.col}30`, color:s.col }}>
+                    <div className="w-14 h-14 rounded-xl flex items-center justify-center mb-6 transition-all duration-400 group-hover:scale-110"
+                      style={{ background:`${s.col}18`, border:`1px solid ${s.col}40`, color:s.col,
+                        boxShadow:`0 0 20px ${s.col}20` }}>
                       {s.icon}
                     </div>
-                    <h3 className="text-white font-bold text-xl mb-3 tracking-tight group-hover:text-grad transition-all duration-300">{s.title}</h3>
-                    <p className="text-sm leading-relaxed mb-5" style={{ color:"rgba(255,255,255,0.38)" }}>{s.desc}</p>
-                    <a href="#contact" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider hover:gap-3 transition-all duration-300"
+                    <h3 className="text-white font-bold text-xl mb-3 tracking-tight transition-all duration-300"
+                      style={{ textShadow:"0 0 0 transparent" }}
+                      onMouseEnter={e=>{ e.currentTarget.style.color=s.col; }}
+                      onMouseLeave={e=>{ e.currentTarget.style.color="white"; }}>
+                      {s.title}
+                    </h3>
+                    <p className="text-sm leading-relaxed mb-6" style={{ color:"rgba(255,255,255,0.38)" }}>{s.desc}</p>
+                    <a href="#contact" className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider group/link"
                       style={{ color:s.col }}>
-                      Get Started <ChevronRight className="w-3.5 h-3.5"/>
+                      <span className="border-b border-current pb-0.5 group-hover/link:pr-2 transition-all duration-300">Get Started</span>
+                      <ChevronRight className="w-3.5 h-3.5 group-hover/link:translate-x-1 transition-transform duration-300"/>
                     </a>
                   </div>
                 </div>
@@ -586,21 +637,40 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {REVIEWS.map((r,i)=>(
               <Reveal key={r.name} delay={i*0.1}>
-                <div className="group p-8 rounded-xl h-full flex flex-col gap-6 transition-all duration-400 hover:scale-[1.02] cursor-default"
-                  style={{ background:"#0a0a10", border:"1px solid rgba(255,255,255,0.06)" }}
-                  onMouseEnter={e=>{ e.currentTarget.style.borderColor="rgba(139,92,246,0.3)"; }}
-                  onMouseLeave={e=>{ e.currentTarget.style.borderColor="rgba(255,255,255,0.06)"; }}>
-                  <div className="flex items-start justify-between">
-                    <Quote className="w-8 h-8 text-purple-500/25 group-hover:text-purple-500/55 transition-colors"/>
+                <div className="group p-8 rounded-2xl h-full flex flex-col gap-6 transition-all duration-400 cursor-default relative overflow-hidden"
+                  style={{ background:"linear-gradient(135deg,#0d0d16 0%,#0a0a12 100%)", border:"1px solid rgba(255,255,255,0.07)" }}
+                  onMouseEnter={e=>{
+                    e.currentTarget.style.borderColor="rgba(139,92,246,0.4)";
+                    e.currentTarget.style.boxShadow="0 0 0 1px rgba(139,92,246,0.2), 0 0 40px rgba(139,92,246,0.1), 0 20px 60px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)";
+                    e.currentTarget.style.transform="translateY(-4px)";
+                  }}
+                  onMouseLeave={e=>{
+                    e.currentTarget.style.borderColor="rgba(255,255,255,0.07)";
+                    e.currentTarget.style.boxShadow="none";
+                    e.currentTarget.style.transform="translateY(0)";
+                  }}>
+                  {/* Top glow accent */}
+                  <div className="absolute top-0 left-1/4 right-1/4 h-px opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+                    style={{ background:"linear-gradient(to right,transparent,rgba(139,92,246,0.8),transparent)",
+                      boxShadow:"0 0 12px rgba(139,92,246,0.8)" }}/>
+                  {/* Ambient orb */}
+                  <div className="absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+                    style={{ background:"radial-gradient(circle, rgba(139,92,246,0.12), transparent 70%)", filter:"blur(20px)" }}/>
+
+                  <div className="flex items-start justify-between relative z-10">
+                    <Quote className="w-9 h-9 transition-all duration-300"
+                      style={{ color:"rgba(139,92,246,0.2)" }}/>
                     <div className="flex gap-0.5">
                       {Array.from({length:r.stars}).map((_,j)=>(
-                        <Star key={j} className="w-3.5 h-3.5 fill-purple-400 text-purple-400"/>
+                        <Star key={j} className="w-3.5 h-3.5 fill-purple-400 text-purple-400"
+                          style={{ filter:"drop-shadow(0 0 4px rgba(192,132,252,0.6))" }}/>
                       ))}
                     </div>
                   </div>
-                  <p className="text-sm leading-relaxed flex-1 italic" style={{ color:"rgba(255,255,255,0.45)" }}>"{r.text}"</p>
-                  <div className="flex items-center gap-3 pt-4" style={{ borderTop:"1px solid rgba(255,255,255,0.05)" }}>
-                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 grad-main">
+                  <p className="text-sm leading-relaxed flex-1 italic relative z-10" style={{ color:"rgba(255,255,255,0.5)" }}>"{r.text}"</p>
+                  <div className="flex items-center gap-3 pt-4 relative z-10" style={{ borderTop:"1px solid rgba(255,255,255,0.06)" }}>
+                    <div className="w-10 h-10 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 grad-main"
+                      style={{ boxShadow:"0 0 15px rgba(139,92,246,0.4)" }}>
                       {r.av}
                     </div>
                     <div>
@@ -616,15 +686,32 @@ export default function Home() {
       </section>
 
       {/* ── CTA ── */}
-      <section className="py-6 px-6 md:px-16" style={{ borderTop:"1px solid rgba(255,255,255,0.04)" }}>
+      <section className="py-6 px-6 md:px-16 relative">
+        <div className="depth-divider mb-6"/>
         <Reveal>
           <div className="relative overflow-hidden rounded-2xl py-24 px-10 md:px-20 text-center"
-            style={{ background:"linear-gradient(135deg,rgba(139,92,246,0.12) 0%,rgba(6,182,212,0.08) 50%,rgba(139,92,246,0.06) 100%)", border:"1px solid rgba(139,92,246,0.2)" }}>
-            <div className="absolute inset-0 pointer-events-none"
-              style={{ background:"radial-gradient(ellipse 80% 80% at 50% 100%,rgba(139,92,246,0.08),transparent)" }}/>
+            style={{
+              background:"linear-gradient(135deg,rgba(20,12,40,0.95) 0%,rgba(5,5,20,0.98) 50%,rgba(8,16,30,0.95) 100%)",
+              border:"1px solid rgba(139,92,246,0.25)",
+              boxShadow:"0 0 0 1px rgba(139,92,246,0.12), 0 0 80px rgba(139,92,246,0.08), 0 40px 120px rgba(0,0,0,0.8)"
+            }}>
+            {/* Ambient purple blob */}
+            <div className="absolute blob-a pointer-events-none"
+              style={{ left:"-10%", bottom:"-20%", width:"60%", height:"200%", borderRadius:"50%",
+                background:"radial-gradient(circle, rgba(139,92,246,0.2) 0%, rgba(99,57,230,0.08) 45%, transparent 70%)",
+                filter:"blur(60px)" }}/>
+            {/* Ambient cyan blob */}
+            <div className="absolute blob-b pointer-events-none"
+              style={{ right:"-10%", top:"-20%", width:"50%", height:"180%", borderRadius:"50%",
+                background:"radial-gradient(circle, rgba(6,182,212,0.12) 0%, transparent 65%)",
+                filter:"blur(70px)" }}/>
             {/* Ghost text */}
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none select-none overflow-hidden">
-              <span className="display-text font-black text-grad opacity-[0.04]" style={{ fontSize:"clamp(5rem,18vw,14rem)", whiteSpace:"nowrap" }}>HIRE ME</span>
+              <span className="display-text font-black opacity-[0.035]"
+                style={{ fontSize:"clamp(5rem,18vw,14rem)", whiteSpace:"nowrap",
+                  background:"linear-gradient(135deg,#c084fc,#22d3ee)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", backgroundClip:"text" }}>
+                HIRE ME
+              </span>
             </div>
             <div className="relative z-10">
               <div className="flex items-center justify-center gap-4 mb-6">
