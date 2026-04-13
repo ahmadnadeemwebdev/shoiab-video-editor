@@ -3,7 +3,7 @@ import { motion, useScroll, useTransform, useInView, AnimatePresence, useMotionV
 import {
   Play, Pause, MessageCircle, Mail, Instagram, Youtube, ArrowDown,
   ArrowRight, Film, Zap, Clapperboard, ChevronRight, Eye,
-  Star, Quote, VolumeX, Volume2, X, Twitter, Monitor
+  Star, Quote, VolumeX, Volume2, X, Monitor
 } from 'lucide-react';
 
 import heroBg     from '../assets/hero-bg.png';
@@ -760,15 +760,6 @@ export default function Home() {
               </a>
             ))}
           </div>
-          <div className="flex flex-wrap justify-center gap-3">
-            {[{icon:<Youtube className="w-4 h-4"/>,lbl:"YouTube",c:"#ef4444"},{icon:<Twitter className="w-4 h-4"/>,lbl:"Twitter",c:"#38bdf8"}].map(s=>(
-              <a key={s.lbl} href="#"
-                className="flex items-center gap-2 px-4 py-2.5 rounded-full glass text-sm hover:scale-105 transition-all duration-300"
-                style={{ color:s.c }}>
-                {s.icon} {s.lbl}
-              </a>
-            ))}
-          </div>
         </Reveal>
       </section>
 
@@ -782,7 +773,7 @@ export default function Home() {
             © {new Date().getFullYear()} Shoaib. All rights reserved. Crafted frame by frame.
           </div>
           <div className="flex gap-5" style={{ color:"rgba(255,255,255,0.18)", fontSize:"12px" }}>
-            {["Instagram","YouTube","WhatsApp"].map(l=>(
+            {["Instagram","WhatsApp"].map(l=>(
               <a key={l} href="#" className="hover:text-purple-400 transition-colors">{l}</a>
             ))}
           </div>
