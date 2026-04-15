@@ -1,4 +1,7 @@
 {
-  "installCommand": "pnpm install --no-frozen-lockfile",
-  "buildCommand": "cd portfolio && npm run build"
-}
+    "installCommand": "pnpm install --no-frozen-lockfile",
+    "buildCommand": "pnpm --filter @workspace/portfolio run build",
+    "outputDirectory": "artifacts/portfolio/dist/public",
+    "framework": null
+  }
+  
