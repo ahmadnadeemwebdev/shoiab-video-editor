@@ -1,7 +1,8 @@
 {
     "installCommand": "pnpm install --no-frozen-lockfile",
     "buildCommand": "pnpm --filter @workspace/portfolio run build",
-    "outputDirectory": "artifacts/portfolio/dist",
-    "framework": null
+    "outputDirectory": "dist",
+    "framework": null,
+    "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
   }
   
