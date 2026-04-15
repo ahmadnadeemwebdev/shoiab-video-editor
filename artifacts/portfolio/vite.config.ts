@@ -19,6 +19,12 @@ import { defineConfig } from "vite";
     build: {
       outDir: path.resolve(import.meta.dirname, "dist"),
       emptyOutDir: true,
+      rollupOptions: {
+        onwarn(warning, warn) {
+          if (warning.code === "MODULE_LEVEL_DIRECTIVE") return;
+          warn(warning);
+        },
+      },
     },
   });
   
